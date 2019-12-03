@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"io"
 
+	"github.com/ngarindungu/repo-cli/repo"
 	"github.com/mkideal/cli"
 )
 
@@ -26,6 +28,7 @@ type rootT struct {
 }
 
 var root = &cli.Command{
+	Global: true,
 	Argv: func() interface{} { return new(rootT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*rootT)
@@ -54,7 +57,7 @@ var create = &cli.Command{
 }
 
 type listT struct {
-	cli.Helper
+	// cli.Helper
 	First int    `cli:"first" usage:"List the first n repos" dft:"10"`
 	Last  int    `cli:"last" usage:"List the last n repos" dft:"10"`
 	Order string `cli:"order" usage:"Order in which to fetch repos" dft:"creation"`
@@ -66,6 +69,11 @@ var list = &cli.Command{
 	Argv: func() interface{} { return new(listT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*listT)
+		rootArgv := ctx.RootArgv().(*rootT)
+		repos := repo.List(rootArgv.Token)
+		for _,r := range repos {
+			io.WriteString(os.Stdout, r)
+		}
 		ctx.String("Reading repos ordered by %s", argv.Order)
 		return nil
 	},
