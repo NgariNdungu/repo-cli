@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"io"
+	// "io"
 
 	"github.com/ngarindungu/repo-cli/repo"
 	"github.com/mkideal/cli"
@@ -70,11 +70,8 @@ var list = &cli.Command{
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*listT)
 		rootArgv := ctx.RootArgv().(*rootT)
-		repos := repo.List(rootArgv.Token)
-		for _,r := range repos {
-			io.WriteString(os.Stdout, r)
-		}
-		ctx.String("Reading repos ordered by %s", argv.Order)
+		ctx.String("Reading repos ordered by %s\n", argv.Order)
+		repo.List(rootArgv.Token)
 		return nil
 	},
 }
