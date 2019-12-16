@@ -5,8 +5,8 @@ import (
 	"os"
 	// "io"
 
-	"github.com/ngarindungu/repo-cli/repo"
 	"github.com/mkideal/cli"
+	"github.com/ngarindungu/repo-cli/repo"
 )
 
 // commands to manage repos
@@ -29,7 +29,7 @@ type rootT struct {
 
 var root = &cli.Command{
 	Global: true,
-	Argv: func() interface{} { return new(rootT) },
+	Argv:   func() interface{} { return new(rootT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*rootT)
 		ctx.String("Passed in token: %s", argv.Token)
@@ -58,9 +58,9 @@ var create = &cli.Command{
 
 type listT struct {
 	// cli.Helper
-	First int    `cli:"first" usage:"List the first n repos" dft:"10"`
-	Last  int    `cli:"last" usage:"List the last n repos" dft:"10"`
-	Order string `cli:"order" usage:"Order in which to fetch repos" dft:"creation"`
+	Limit   int    `cli:"n,limit" usage:"Limit to n repos" dft:"10"`
+	Reverse bool   `cli:"desc" usage:"List repos in descending order"`
+	Order   string `cli:"order" usage:"Order in which to fetch repos" dft:"creation"`
 }
 
 var list = &cli.Command{
@@ -71,7 +71,7 @@ var list = &cli.Command{
 		argv := ctx.Argv().(*listT)
 		rootArgv := ctx.RootArgv().(*rootT)
 		ctx.String("Reading repos ordered by %s\n", argv.Order)
-		repo.List(rootArgv.Token)
+		repo.List(rootArgv.Token, argv.Order, argv.Reverse, argv.Limit)
 		return nil
 	},
 }

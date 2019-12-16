@@ -16,12 +16,36 @@ var client = &http.Client{}
 var endpoint = "https://api.github.com/graphql"
 // var endpoint = "https://repo-cli.free.beeceptor.com"
 
-func List(t string) []string {
-	query := `
-	{
-		"query": "query { viewer { repositories(first:10,orderBy:{field:CREATED_AT,direction:DESC}) { edges { node { name url id } } } } }"
+// TODO: validate order flag
+var ordFields = map[string]string {
+	"creation" : "CREATED_AT",
+	"update" : "UPDATED_AT",
+	"push" : "PUSHED_AT",
+	"name" : "NAME",
+}
+
+func List(t string, orderBy string, desc bool, limit int) []string {
+	sort := "ASC"
+	if desc {
+		sort = "DESC"
 	}
-	`
+
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("{\n\"query\":")
+	queryBuilder.WriteString("\"query { viewer { repositories(")
+	repoParams := fmt.Sprintf("first:%d,orderBy:{field:%s,direction:%s}",
+	limit, ordFields[orderBy], sort)
+	queryBuilder.WriteString(repoParams)
+	queryBuilder.WriteString(") { edges { node { name url id } } } } }\"\n}")
+
+	query := queryBuilder.String()
+	// queryO := `
+	// {
+	// 	"query": "query { viewer { repositories(first:10,orderBy:{field:CREATED_AT,direction:DESC}) { edges { node { name url id } } } } }"
+	// }
+	// `
+	// fmt.Print(queryO)
+
 	// generated with https://mholt.github.io/json-to-go/
 	type Node struct {
 		Name string `json:"name"`
@@ -48,6 +72,9 @@ func List(t string) []string {
 	req,err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(query))
 	req.Header.Add("authorization", "bearer " + t)
 	resp,err := client.Do(req)
+	if err != nil {
+		io.WriteString(os.Stdout, err.Error())
+	}
 	body,err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		io.WriteString(os.Stdout, err.Error())
@@ -62,16 +89,5 @@ func List(t string) []string {
 		fmt.Printf("%d: %s | %s | %s\n", k,v.Node.Name, v.Node.ID, v.Node.URL)
 	}
 	return nil
-}
-
-func Schema(t string) error {
-	req,err := http.NewRequest("GET", endpoint, nil)
-	fmt.Printf("Token: %s", t)
-	req.Header.Add("authorization", "bearer " + t)
-	resp,err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	return resp.Write(os.Stdout)
 }
 
